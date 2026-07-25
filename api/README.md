@@ -1,99 +1,66 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# HDB Resale Flat Prices Explorer — API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS + TypeORM + PostgreSQL REST API serving HDB resale flat transaction data. Read-only, no auth. See the [root README](../README.md) for the full project (frontend + infra) and [ARCHITECTURE.md](../ARCHITECTURE.md) for design decisions.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Setup
 
 ```bash
-$ npm install
+npm install
+cp .env.example .env   # adjust DB_* / DATASTORE_* as needed
 ```
 
-## Compile and run the project
+## Running
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run start:dev   # watch mode, http://localhost:3000/api/resale-flats
+npm run build        # compiles to dist/
+npm run start:prod   # runs the compiled build (node dist/main.js)
 ```
 
-## Run tests
+Requires a running Postgres matching the `DB_*` env vars — see the root `docker-compose.yml`, or run one directly:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker run --rm -d --name hdb-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=hdb_resale -p 5432:5432 postgres:16-alpine
 ```
 
-## Deployment
+## Seeding data
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+One-shot ingestion from data.gov.sg (~236K rows, idempotent — safe to re-run):
 
 ```bash
-$ npm install -g mau
-$ mau deploy
+npm run build && npm run ingest
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Endpoints
 
-## Resources
+| Endpoint | Description |
+|---|---|
+| `GET /api/resale-flats` | Filter, sort, search, paginate transactions |
+| `GET /api/resale-flats/metadata` | Filter inputs: distinct values (towns, flat types, storey ranges) + min/max bounds (price, remaining lease) |
+| `GET /api/resale-flats/insights/avg-price-by-town` | Average resale price grouped by town |
+| `GET /api/resale-flats/insights/price-trend` | Average price over time (optional `town`, `flatType`) |
+| `GET /api/resale-flats/insights/price-vs-lease` | Average price bucketed by remaining lease (5-year bands) |
 
-Check out a few resources that may come in handy when working with NestJS:
+Query params for `GET /api/resale-flats`: `town`, `flatType`, `storeyRange`, `minPrice`, `maxPrice`, `minLeaseMonths`, `search`, `sort` (`field:asc|desc`, e.g. `resalePrice:desc`), `page`, `limit`.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Tests
 
-## Support
+```bash
+npm test          # unit tests, no DB needed
+npm run test:cov  # unit tests with coverage
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+E2e tests need a throwaway Postgres — from the repo root:
 
-## Stay in touch
+```bash
+docker compose -f ../docker-compose.test.yml up -d
+DB_HOST=localhost DB_PORT=5433 DB_USER=postgres DB_PASSWORD=postgres \
+  DB_NAME=hdb_resale_test DB_SYNCHRONIZE=true npm run test:e2e
+docker compose -f ../docker-compose.test.yml down
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+(The e2e suite refuses to run against any database whose name doesn't contain `test`, as a guard against accidentally pointing it at real data.)
 
-## License
+## Project structure
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+See [ARCHITECTURE.md](../ARCHITECTURE.md#backend-module-structure-apisrc) for the `src/` layout and module boundaries (`transactions/`, `ingestion/`, `common/`).
