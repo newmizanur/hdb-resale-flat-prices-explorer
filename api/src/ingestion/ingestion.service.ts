@@ -62,6 +62,12 @@ export class IngestionService {
   }
 
   async run(): Promise<{ fetched: number; inserted: number }> {
+    const existingCount = await this.repo.count();
+    if (existingCount > 0) {
+      this.logger.log(`Skipping ingestion: ${existingCount} rows already present.`);
+      return { fetched: 0, inserted: 0 };
+    }
+
     let offset = 0;
     let total = Infinity;
     let fetched = 0;

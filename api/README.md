@@ -25,11 +25,13 @@ docker run --rm -d --name hdb-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES
 
 ## Seeding data
 
-One-shot ingestion from data.gov.sg (~236K rows, idempotent — safe to re-run):
+One-shot ingestion from data.gov.sg (~236K rows). Idempotent and safe to re-run — it checks the row count first and skips entirely if the table is already populated:
 
 ```bash
 npm run build && npm run ingest
 ```
+
+Under Docker Compose this runs automatically via a dedicated `ingest` service (same image as `api`, different command — see root `docker-compose.yml`), started concurrently alongside `api` rather than blocking it, so the API is queryable immediately instead of waiting on ingestion to finish. The command above is for running it standalone (e.g. outside Docker, or to force a re-run against a database seeded some other way).
 
 ## Endpoints
 
