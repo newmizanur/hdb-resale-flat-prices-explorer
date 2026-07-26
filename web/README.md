@@ -20,10 +20,11 @@ npm run preview   # serve the production build locally
 ## Tests
 
 ```bash
-npm test   # Vitest + Vue Test Utils, mounts real PrimeVue components under jsdom
+npm test          # Vitest + Vue Test Utils, mounts real PrimeVue components under jsdom
+npm run test:cov  # same, with a v8 coverage report (text + html + lcov, output in coverage/)
 ```
 
-Covers `TransactionFilters.vue` and `TransactionsTable.vue` (6 tests). No tests yet for the views (`TransactionsView.vue`, `InsightsView.vue`) or `services/api.ts`.
+Covers `TransactionFilters.vue` and `TransactionsTable.vue` (6 tests). No tests yet for the views (`TransactionsView.vue`, `InsightsView.vue`) or `services/api.ts` — coverage report makes this gap explicit rather than hiding it.
 
 ## Project structure
 
