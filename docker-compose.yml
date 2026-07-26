@@ -1,0 +1,66 @@
+x-db-env: &db-env
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+  DB_NAME: hdb_resale
+  DB_SYNCHRONIZE: "true"
+  DATASTORE_URL: https://data.gov.sg/api/action/datastore_search
+  DATASTORE_RESOURCE_ID: d_8b84c4ee58e3cfc0ece0d773c8ca6abc
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hdb_resale
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    environment:
+      <<: *db-env
+      PORT: 3000
+      WEB_ORIGIN: http://localhost:5173
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # One-shot ingestion, run as its own container alongside `api` (both only
+  # depend on postgres, so they start concurrently — no waiting on each other).
+  # Reuses the api image/build, just overrides the command. Idempotent: skips
+  # instantly if the table is already seeded (see IngestionService.run()), so
+  # it's safe to leave running on every `docker compose up`.
+  ingest:
+    build: ./api
+    command: node dist/run-ingestion.js
+    environment:
+      <<: *db-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: http://localhost:3000/api
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
