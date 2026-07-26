@@ -7,27 +7,27 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Get()
-  findAll(@Query() query: QueryTransactionsDto) {
-    return this.transactionsService.findAll(query);
+  async findAll(@Query() query: QueryTransactionsDto) {
+    return await this.transactionsService.findAll(query);
   }
 
   @Get('metadata')
-  getMetadata() {
-    return this.transactionsService.getMetadata();
+  async getMetadata() {
+    return await this.transactionsService.getMetadata();
   }
 
   @Get('insights/avg-price-by-town')
-  getAvgPriceByTown() {
-    return this.transactionsService.getAvgPriceByTown();
+  async getAvgPriceByTown() {
+    return await this.transactionsService.getAvgPriceByTown();
   }
 
   @Get('insights/price-trend')
-  getPriceTrend(@Query('town') town?: string, @Query('flatType') flatType?: string) {
-    return this.transactionsService.getPriceTrend(town, flatType);
+  async getPriceTrend(@Query('town') town?: string, @Query('flatType') flatType?: string) {
+    return await this.transactionsService.getPriceTrend(town, flatType);
   }
 
   @Get('insights/price-vs-lease')
-  getPriceVsLease() {
-    return this.transactionsService.getPriceVsLease();
+  async getPriceVsLease() {
+    return await this.transactionsService.getPriceVsLease();
   }
 }
