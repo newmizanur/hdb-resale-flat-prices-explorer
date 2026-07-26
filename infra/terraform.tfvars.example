@@ -1,0 +1,16 @@
+# Copy this file to terraform.tfvars and fill in real values before running
+# `terraform plan` or `terraform apply`.
+#
+# terraform.tfvars is gitignored — never commit real credentials.
+# All other variables (region, CIDRs, project name, image tags) have sensible
+# defaults in variables.tf and don't need to be overridden unless customizing.
+
+db_password = "changeme-use-a-strong-password"
+
+# Optional overrides (defaults shown):
+# aws_region   = "ap-southeast-1"
+# project_name = "hdb-resale-explorer"
+# db_username  = "postgres"
+# db_name      = "hdb_resale"
+# api_image    = "hdb-resale-explorer-api:latest"
+# web_image    = "hdb-resale-explorer-web:latest"
